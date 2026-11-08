@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17324d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Minha Frota">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Minha Frota</title>
+<style>
+:root{--navy:#17324d;--blue:#245b83;--bg:#f3f6f8;--line:#e1e7ec;--muted:#697887;--white:#fff;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#18232d;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--navy);color:white;padding:calc(18px + env(safe-area-inset-top)) 18px 20px}
+h1{font-size:24px;margin:0 0 5px}header p{margin:0;color:#d7e2eb;font-size:14px}
+main{max-width:680px;margin:auto;padding:16px 14px calc(28px + env(safe-area-inset-bottom))}
+.search{width:100%;padding:15px 14px;border:1px solid var(--line);border-radius:13px;font-size:16px;background:white;outline:none}
+.actions{display:flex;gap:9px;margin:12px 0 18px}.btn{border:0;border-radius:12px;padding:13px 15px;font-weight:650;font-size:15px;cursor:pointer}
+.primary{background:var(--blue);color:white;flex:1}.secondary{background:#e6edf2;color:var(--navy)}
+.stats{display:flex;gap:10px;margin-bottom:16px}.stat{background:white;border:1px solid var(--line);border-radius:13px;padding:12px 14px;flex:1}.stat strong{display:block;font-size:22px}.stat span{font-size:12px;color:var(--muted)}
+.section-title{font-size:15px;font-weight:700;margin:18px 2px 10px}
+.vehicle{background:white;border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:10px;cursor:pointer}
+.vehicle-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.plate{font-size:19px;font-weight:800;letter-spacing:.5px}.tag{font-size:12px;background:#edf2f6;color:#42576a;padding:5px 9px;border-radius:20px}
+.preview{font-size:14px;color:#4d5d6b;margin:9px 0 0;line-height:1.4}.date{font-size:12px;color:var(--muted);margin-top:7px}
+.empty{text-align:center;background:white;border:1px dashed #cbd5dd;border-radius:14px;padding:25px 16px;color:var(--muted);line-height:1.5}
+.hidden{display:none!important}
+.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:16px;margin-top:12px}
+label{display:block;font-size:13px;font-weight:650;margin:12px 0 6px;color:#344454}
+input,select,textarea{width:100%;border:1px solid #d5dde4;border-radius:10px;padding:12px;font:16px inherit;background:white;color:#18232d}
+textarea{min-height:100px;resize:vertical}
+.row{display:flex;gap:9px}.row>*{flex:1}
+.note{border-top:1px solid var(--line);padding:13px 0}.note:first-child{border-top:0}.note p{margin:7px 0;white-space:pre-wrap;line-height:1.45}.note small{color:var(--muted)}
+.note-actions{display:flex;gap:8px}.linkbtn{border:0;background:none;color:var(--blue);padding:5px 0;font-weight:650}
+.danger{color:var(--red)}.back{background:none;border:0;color:white;font-size:15px;padding:0 0 14px}
+footer{font-size:12px;color:var(--muted);text-align:center;padding:18px 4px}
+</style>
+</head>
+<body>
+<header>
+  <button id="backBtn" class="back hidden">← Voltar à lista</button>
+  <h1>Minha Frota</h1>
+  <p>As tuas matrículas e anotações, num só lugar.</p>
+</header>
+<main>
+  <section id="home">
+    <input id="search" class="search" placeholder="🔎  Procurar matrícula..." autocomplete="off">
+    <div class="actions">
+      <button class="btn primary" id="addBtn">＋ Adicionar veículo</button>
+      <button class="btn secondary" id="backupBtn" title="Cópia de segurança">↧</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong id="truckCount">0</strong><span>Camiões</span></div>
+      <div class="stat"><strong id="trailerCount">0</strong><span>Reboques</span></div>
+    </div>
+    <div class="section-title">Veículos registados</div>
+    <div id="vehicleList"></div>
+    <footer>Os dados ficam guardados neste dispositivo. Faz cópias de segurança regularmente.</footer>
+  </section>
+
+  <section id="detail" class="hidden">
+    <div class="actions">
+      <button class="btn primary" id="addNoteBtn">＋ Nova anotação</button>
+      <button class="btn secondary" id="editVehicleBtn">Editar</button>
+    </div>
+    <div class="panel">
+      <div class="vehicle-top"><div class="plate" id="detailPlate"></div><span class="tag" id="detailType"></span></div>
+      <div id="detailNotes" style="margin-top:12px"></div>
+    </div>
+    <footer>As anotações ficam associadas a esta matrícula.</footer>
+  </section>
+
+  <section id="formView" class="hidden">
+    <div class="panel">
+      <h2 id="formTitle" style="font-size:19px;margin:0">Adicionar veículo</h2>
+      <label for="plateInput">Matrícula</label>
+      <input id="plateInput" placeholder="Ex.: 12-AB-34" autocapitalize="characters" maxlength="16">
+      <label for="typeInput">Tipo</label>
+      <select id="typeInput"><option value="Camião">Camião</option><option value="Reboque">Reboque</option></select>
+      <label for="vehicleName">Nome ou identificação (opcional)</label>
+      <input id="vehicleName" placeholder="Ex.: Camião habitual">
+      <div class="actions" style="margin:18px 0 0">
+        <button class="btn primary" id="saveVehicleBtn">Guardar</button>
+        <button class="btn secondary" id="cancelFormBtn">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="noteView" class="hidden">
+    <div class="panel">
+      <h2 id="noteTitle" style="font-size:19px;margin:0">Nova anotação</h2>
+      <label for="noteText">O que queres registar?</label>
+      <textarea id="noteText" placeholder="Ex.: Luz traseira direita fundida. Avisar a oficina."></textarea>
+      <div class="actions" style="margin:18px 0 0">
+        <button class="btn primary" id="saveNoteBtn">Guardar anotação</button>
+        <button class="btn secondary" id="cancelNoteBtn">Cancelar</button>
+      </div>
+    </div>
+  </section>
+  <section id="backupView" class="hidden">
+    <div class="panel">
+      <h2 style="font-size:19px;margin:0">Cópia de segurança</h2>
+      <p style="color:var(--muted);line-height:1.5">Exporta os teus registos para um ficheiro. Guarda-o no iCloud Drive ou noutro local seguro. Podes importá-lo mais tarde para recuperar os dados.</p>
+      <div class="actions"><button class="btn primary" id="exportBtn">Exportar dados</button></div>
+      <label for="importFile">Restaurar uma cópia</label><input id="importFile" type="file" accept="application/json,.json">
+      <p style="font-size:12px;color:var(--muted)">A importação substitui os registos atuais pelos dados da cópia escolhida.</p>
+      <button class="btn secondary" id="closeBackupBtn">Fechar</button>
+    </div>
+  </section>
+</main>
+<script>
+const KEY='minha-frota-v1';
+let vehicles=load(), currentId=null, editingVehicle=null, editingNote=null;
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(vehicles))}
+function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function fmt(d){return new Date(d).toLocaleDateString('pt-PT')}
+function show(which){['home','detail','formView','noteView','backupView'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==which));document.getElementById('backBtn').classList.toggle('hidden',which==='home')}
+function back(){if(currentId && !['home','formView','backupView'].includes(activeView)){openDetail(currentId)}else{show('home');render()}}
+let activeView='home';
+function go(v){activeView=v;show(v)}
+function render(){
+ const q=document.getElementById('search').value.trim().toUpperCase();
+ const list=vehicles.filter(v=>v.plate.includes(q)).sort((a,b)=>a.plate.localeCompare(b.plate));
+ document.getElementById('truckCount').textContent=vehicles.filter(v=>v.type==='Camião').length;
+ document.getElementById('trailerCount').textContent=vehicles.filter(v=>v.type==='Reboque').length;
+ const root=document.getElementById('vehicleList');root.innerHTML='';
+ if(!list.length){root.innerHTML='<div class="empty">'+(vehicles.length?'Não encontrei nenhuma matrícula.':'Ainda não tens veículos registados.<br>Carrega em “Adicionar veículo” para começar.')+'</div>';return}
+ list.forEach(v=>{const last=(v.notes||[]).slice().sort((a,b)=>b.date-a.date)[0];const el=document.createElement('div');el.className='vehicle';el.innerHTML=`<div class="vehicle-top"><span class="plate"></span><span class="tag"></span></div><div class="preview"></div><div class="date"></div>`;el.querySelector('.plate').textContent=v.plate;el.querySelector('.tag').textContent=v.type;el.querySelector('.preview').textContent=last?last.text:'Sem anotações';el.querySelector('.date').textContent=last?'Última anotação: '+fmt(last.date): (v.name||'Sem anotações');el.onclick=()=>openDetail(v.id);root.appendChild(el)})
+}
+function openDetail(vid){currentId=vid;const v=vehicles.find(x=>x.id===vid);if(!v)return;document.getElementById('detailPlate').textContent=v.plate;document.getElementById('detailType').textContent=v.type;const root=document.getElementById('detailNotes');root.innerHTML='';
+ const notes=(v.notes||[]).slice().sort((a,b)=>b.date-a.date);
+ if(!notes.length)root.innerHTML='<div class="empty">Ainda não existem anotações para esta matrícula.</div>';
+ notes.forEach(n=>{const el=document.createElement('div');el.className='note';const date=document.createElement('small');date.textContent=fmt(n.date);const p=document.createElement('p');p.textContent=n.text;const actions=document.createElement('div');actions.className='note-actions';const edit=document.createElement('button');edit.className='linkbtn';edit.textContent='Editar';edit.onclick=()=>noteForm(n.id);const del=document.createElement('button');del.className='linkbtn danger';del.textContent='Apagar';del.onclick=()=>deleteNote(n.id);actions.append(edit,del);el.append(date,p,actions);root.appendChild(el)});
+ go('detail')
+}
+function vehicleForm(){editingVehicle=currentId?vehicles.find(v=>v.id===currentId):null;document.getElementById('formTitle').textContent=editingVehicle?'Editar veículo':'Adicionar veículo';document.getElementById('plateInput').value=editingVehicle?.plate||'';document.getElementById('typeInput').value=editingVehicle?.type||'Camião';document.getElementById('vehicleName').value=editingVehicle?.name||'';go('formView')}
+function saveVehicle(){const plate=document.getElementById('plateInput').value.trim().toUpperCase();if(!plate){alert('Indica a matrícula.');return}const duplicate=vehicles.find(v=>v.plate===plate&&v.id!==editingVehicle?.id);if(duplicate){alert('Já existe uma ficha com essa matrícula.');return}
+ if(editingVehicle){editingVehicle.plate=plate;editingVehicle.type=document.getElementById('typeInput').value;editingVehicle.name=document.getElementById('vehicleName').value.trim();persist();openDetail(editingVehicle.id)}
+ else{const v={id:id(),plate,type:document.getElementById('typeInput').value,name:document.getElementById('vehicleName').value.trim(),notes:[]};vehicles.push(v);persist();openDetail(v.id)}
+}
+function noteForm(nid){const v=vehicles.find(x=>x.id===currentId);editingNote=nid?v.notes.find(n=>n.id===nid):null;document.getElementById('noteTitle').textContent=editingNote?'Editar anotação':'Nova anotação';document.getElementById('noteText').value=editingNote?.text||'';go('noteView')}
+function saveNote(){const text=document.getElementById('noteText').value.trim();if(!text){alert('Escreve uma anotação.');return}const v=vehicles.find(x=>x.id===currentId);if(editingNote){editingNote.text=text;editingNote.date=Date.now()}else{v.notes.push({id:id(),text,date:Date.now()})}persist();openDetail(currentId)}
+function deleteNote(nid){if(!confirm('Apagar esta anotação?'))return;const v=vehicles.find(x=>x.id===currentId);v.notes=v.notes.filter(n=>n.id!==nid);persist();openDetail(currentId)}
+function backup(){go('backupView')}
+function exportData(){const blob=new Blob([JSON.stringify({app:'Minha Frota',version:1,vehicles},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='minha-frota-copia-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('addBtn').onclick=()=>{currentId=null;vehicleForm()};
+document.getElementById('saveVehicleBtn').onclick=saveVehicle;
+document.getElementById('cancelFormBtn').onclick=()=>{if(currentId)openDetail(currentId);else{go('home');render()}};
+document.getElementById('backBtn').onclick=()=>{go('home');render()};
+document.getElementById('addNoteBtn').onclick=()=>noteForm();
+document.getElementById('saveNoteBtn').onclick=saveNote;
+document.getElementById('cancelNoteBtn').onclick=()=>openDetail(currentId);
+document.getElementById('editVehicleBtn').onclick=vehicleForm;
+document.getElementById('backupBtn').onclick=backup;
+document.getElementById('closeBackupBtn').onclick=()=>{go('home');render()};
+document.getElementById('exportBtn').onclick=exportData;
+document.getElementById('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data.vehicles))throw Error();if(!confirm('Isto vai substituir os registos atuais. Continuar?'))return;vehicles=data.vehicles;persist();alert('Cópia restaurada.');go('home');render()}catch(err){alert('Não foi possível ler essa cópia.')}}; 
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+render();
+</script>
+</body>
+</html>

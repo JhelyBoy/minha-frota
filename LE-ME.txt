@@ -1,0 +1,20 @@
+MINHA FROTA — primeira versão
+
+Inclui:
+- Registo de camiões e reboques por matrícula
+- Pesquisa por matrícula
+- Ficha individual e histórico de anotações com data
+- Edição e eliminação de anotações
+- Exportação e importação de cópia de segurança em JSON
+- Armazenamento local no navegador (localStorage)
+
+IMPORTANTE:
+Os dados ficam no armazenamento local do navegador/dispositivo. Não são sincronizados com outros dispositivos.
+Limpar os dados do Safari, mudar de navegador ou perder o iPhone pode apagar os registos. Usa regularmente "Cópia de segurança".
+
+Para instalar como app no iPhone:
+1. Publicar estes ficheiros num alojamento HTTPS.
+2. Abrir o endereço no Safari do iPhone.
+3. Tocar em Partilhar > Adicionar ao ecrã principal.
+
+Esta é uma primeira versão funcional de demonstração. Antes de guardar informação importante, testa e faz uma cópia de segurança.
